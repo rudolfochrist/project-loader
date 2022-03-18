@@ -9,7 +9,7 @@
 =========
 
   ,----
-  | 0.1
+  | 0.2.0
   `----
 
 
@@ -22,7 +22,9 @@
 
   Later..
 
-  #+begin_src sh sbcl --no-userinit --load load.lisp #+end_src>
+  ,----
+  | $ sbcl --no-userinit --load load.lisp
+  `----
 
 
 4 DESCRIPTION
