@@ -1,0 +1,44 @@
+#+STARTUP: showall
+#+EXPORT_FILE_NAME: ../README.txt
+#+OPTIONS: toc:nil author:nil
+# This is just the template README. Export to txt to get the real README.
+* NAME
+
+project-loader --- A utility to load Quicklisp systems without Quicklisp itself
+
+* VERSION
+
+#+BEGIN_SRC shell :exports results
+cat ../version
+#+END_SRC
+
+* SYNOPSIS
+
+#+begin_src lisp
+(project-loader:create-load-file "/path/")
+#+end_src
+
+Later..
+
+#+begin_src sh
+sbcl --no-userinit --load load.lisp
+#+end_src>
+
+* DESCRIPTION
+
+Dump images or create executables without Quicklisp but still find your dependencies.
+
+** FUNCTIONS
+
+ - ~PROJECT-LOADER:CREATE-LOAD-FILE (&OPTIONAL PATH)~ ::
+   Create load.lisp file at PATH.
+   If PATH is nil use current working directory.
+
+
+* AUTHOR
+
+Sebastian Christ ([[mailto:rudolfo.christ@pm.me]])
+
+* LICENSE
+
+Released under the MPL-2.0 license.
