@@ -17,7 +17,7 @@
 ==========
 
   ,----
-  | (project-loader:create-load-file "/path/")
+  | CL-USER> (project-loader:create-load-file "/path/")
   `----
 
   Later..

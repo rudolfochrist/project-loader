@@ -15,7 +15,7 @@ cat ../version
 * SYNOPSIS
 
 #+begin_src lisp
-(project-loader:create-load-file "/path/")
+CL-USER> (project-loader:create-load-file "/path/")
 #+end_src
 
 Later..
