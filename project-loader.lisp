@@ -4,7 +4,10 @@
   (:nicknames #:pl)
   (:use :cl)
   (:export
-   #:create-load-file))
+   #:create-load-file
+   #:local-system-searcher
+   #:register-local-system-searcher
+   #:load-system))
 
 (in-package #:project-loader)
 
@@ -18,3 +21,19 @@ If PATH is nil use current working directory."
                                                (uiop:getcwd))
                                  :name "load"
                                  :type "lisp")))
+
+(defun load-system (system-name &optional (path *default-pathname-defaults*))
+  (let ((*default-pathname-defaults* (pathname path)))
+    #+quicklisp (ql:quickload system-name)
+    #-quicklisp (asdf:load-system system-name)))
+
+
+(defun register-local-system-searcher ()
+  (pushnew #'local-system-searcher asdf:*system-definition-search-functions*))
+
+
+(defun local-system-searcher (system-name)
+  (let ((primary-system-name (asdf:primary-system-name system-name)))
+    (probe-file (make-pathname :defaults *default-pathname-defaults*
+                               :name primary-system-name
+                               :type "asd"))))
