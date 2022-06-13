@@ -7,7 +7,8 @@
    #:create-load-file
    #:local-system-searcher
    #:register-local-system-searcher
-   #:load-system))
+   #:load-system
+   #:bundle-dependencies))
 
 (in-package #:project-loader)
 
@@ -37,3 +38,11 @@ If PATH is nil use current working directory."
     (probe-file (make-pathname :defaults *default-pathname-defaults*
                                :name primary-system-name
                                :type "asd"))))
+
+(defun system-deps (system)
+  (remove-if (complement #'stringp)
+             (asdf:system-depends-on (asdf:find-system system))))
+
+(defun bundle-dependencies(system &optional (dir "lib/"))
+  #-quicklisp (cerror "Please install quicklisp to use the bundle feature.")
+  #+quicklisp (ql:bundle-systems (system-deps system) :to dir))
