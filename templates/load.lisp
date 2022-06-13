@@ -65,8 +65,12 @@
              asds)))
 
 ;;; register search functions
-(setf asdf:*system-definition-search-functions*
-      (append (list #'current-directory-search
-                    #'ql-search
-                    #'ql-local-search)
-              asdf:*system-definition-search-functions*))
+(push #'current-directory-search asdf:*system-definition-search-functions*)
+
+(let ((bundle-file (merge-pathnames "lib/bundle.lisp")))
+  (if (probe-file bundle-file)
+      (load bundle-file)
+      (setf asdf:*system-definition-search-functions*
+            (append (list #'ql-search
+                          #'ql-local-search)
+                    asdf:*system-definition-search-functions*))))
