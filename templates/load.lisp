@@ -10,10 +10,9 @@
 (defpackage #:loader
   (:use :cl)
   (:export
-   #:*quicklisp-location*
    #:current-directory-search
-   #:ql-search
-   #:ql-local-search))
+   #:*quicklisp-location*
+   #:*bundle-location*))
 
 (in-package #:loader)
 
@@ -21,6 +20,9 @@
 
 (defparameter *quicklisp-location* "~/quicklisp/"
   "Quicklisp installation path.")
+
+(defparameter *bundle-location* "lib/"
+  "Project-local path to bundled systems.")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -39,38 +41,11 @@
 
 ;;; TODO: Take dist preference into consideration!
 
-(defun ql-search (name)
-  "Search Quicklisp system for NAME."
-  (let ((system (make-pathname :defaults (merge-pathnames
-                                          "dists/quicklisp/installed/systems/"
-                                          *quicklisp-location*)
-                               :name (asdf:primary-system-name name)
-                               :type "txt")))
-    (when (probe-file system)
-      (with-open-file (stream system )
-        (let* ((release (read-line stream nil)))
-          (probe-file (merge-pathnames release *quicklisp-location*)))))))
-
-
-(defun ql-local-search (name)
-  "Search local Quicklisp system for NAME."
-  (let ((primary-name (asdf:primary-system-name name))
-        (asds (uiop:directory-files (merge-pathnames
-                                     "local-projects/"
-                                     *quicklisp-location*)
-                                    "**/*.asd")))
-    (find-if (lambda (asd)
-               (string= primary-name
-                        (pathname-name asd)))
-             asds)))
-
 ;;; register search functions
 (push #'current-directory-search asdf:*system-definition-search-functions*)
 
-(let ((bundle-file (merge-pathnames "lib/bundle.lisp")))
-  (if (probe-file bundle-file)
-      (load bundle-file)
-      (setf asdf:*system-definition-search-functions*
-            (append (list #'ql-search
-                          #'ql-local-search)
-                    asdf:*system-definition-search-functions*))))
+(let ((bundle-file (merge-pathnames
+                    "bundle.lisp"
+                    (merge-pathnames *bundle-location* (uiop:getcwd)))))
+  (when (probe-file bundle-file)
+    (load bundle-file)))
