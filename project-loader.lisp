@@ -84,7 +84,7 @@ If PATH is nil use current working directory."
                                            (nthcdr name-pos (pathname-directory file)))))))))
 
 
-(defun bundle-dependencies(system &optional (dir "lib/"))
+(defun bundle-dependencies(system &optional (dir "vendor/"))
   #-quicklisp (cerror "Please install quicklisp to use the bundle feature.")
   #+quicklisp
   (destructuring-bind (ql-deps local-deps)

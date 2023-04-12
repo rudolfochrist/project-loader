@@ -21,7 +21,7 @@
 (defparameter *quicklisp-location* "~/quicklisp/"
   "Quicklisp installation path.")
 
-(defparameter *bundle-location* "lib/"
+(defparameter *bundle-location* "vendor/"
   "Project-local path to bundled systems.")
 
 
