@@ -7,9 +7,27 @@
    #:create-load-file
    #:local-system-searcher
    #:register-local-system-searcher
-   #:bundle-dependencies))
+   #:bundle-dependencies
+   #:load-project))
 
 (in-package #:project-loader)
+
+
+#+quicklisp
+(defun load-project (name &key (load-tests t) verbose silent)
+  (let ((systems (list name)))
+    (when load-tests
+      (push (concatenate 'string name "/test") systems))
+    (ql:quickload systems :verbose verbose :silent silent)))
+
+
+#+(and asdf (not quicklisp))
+(defun load-project (name &key (load-tests t) verbose force)
+  (asdf:load-system name :force force :verbose verbose)
+  (when load-tests
+    (asdf:load-system (concatenate 'string name "/test")
+                      :force force
+                      :verbose verbose)))
 
 
 (defun create-load-file (&optional path)
@@ -27,7 +45,6 @@ If PATH is nil use current working directory."
 
 (defun register-local-system-searcher ()
   (pushnew #'local-system-searcher asdf:*system-definition-search-functions*)
-  (format t "~&; Registered local-system-searcher~%")
   (force-output))
 
 
