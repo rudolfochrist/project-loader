@@ -15,9 +15,11 @@
 
 #+quicklisp
 (defun load-project (name &key (load-tests t) verbose silent)
-  (let ((systems (list name)))
-    (when load-tests
-      (push (concatenate 'string name "/test") systems))
+  (let ((systems (list name))
+        (test-system (concatenate 'string name "/test")))
+    (when (and load-tests
+               (asdf:find-system test-system nil))
+      (append systems (list test-system) ))
     (ql:quickload systems :verbose verbose :silent silent)))
 
 
