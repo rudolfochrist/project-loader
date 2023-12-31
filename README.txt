@@ -9,7 +9,7 @@
 =========
 
   ,----
-  | 0.5
+  | 0.6.0
   `----
 
 
@@ -17,13 +17,13 @@
 ==========
 
   ,----
-  | CL-USER> (project-loader:create-load-file "/path/")
+  | CL-USER> (project-loader:pin-dependencies)
   `----
 
   Later..
 
   ,----
-  | $ sbcl --no-userinit --load load.lisp
+  | $ sbcl --no-userinit --load init.lisp
   `----
 
 
@@ -32,14 +32,6 @@
 
   Dump images or create executables without Quicklisp but still find
   your dependencies.
-
-
-4.1 FUNCTIONS
-~~~~~~~~~~~~~
-
-  `PROJECT-LOADER:CREATE-LOAD-FILE (&OPTIONAL PATH)'
-        Create load.lisp file at PATH.  If PATH is nil use current
-        working directory.
 
 
 5 AUTHOR

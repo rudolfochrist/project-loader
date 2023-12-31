@@ -15,25 +15,18 @@ cat ../version
 * SYNOPSIS
 
 #+begin_src lisp
-CL-USER> (project-loader:create-load-file "/path/")
+CL-USER> (project-loader:pin-dependencies)
 #+end_src
 
 Later..
 
 #+begin_src sh
-$ sbcl --no-userinit --load load.lisp
+$ sbcl --no-userinit --load init.lisp
 #+end_src
 
 * DESCRIPTION
 
 Dump images or create executables without Quicklisp but still find your dependencies.
-
-** FUNCTIONS
-
- - ~PROJECT-LOADER:CREATE-LOAD-FILE (&OPTIONAL PATH)~ ::
-   Create load.lisp file at PATH.
-   If PATH is nil use current working directory.
-
 
 * AUTHOR
 

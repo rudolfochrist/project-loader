@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# helpers
+
+# meta
+version=$(cat version)
+name=install-dependecies
+
+assert_value ()
+{
+    if [ -z "$2" ] || [ "${2:0:1}" = "-" ]; then
+        echo "Error: Argument for $(cat version) is missing" >&2
+        exit 1
+    fi
+}
+
+usage ()
+{
+    cat <<EOF
+Usage: $(basename $0) [options] [-f file]
+
+Options:
+  -f, --systems-file                     Specify systems.txt file to use.
+  -v, --version                          Show version.
+  -h, --help                             Show help.
+EOF
+}
+
+# Parsing args
+params=""
+systems_file="systems.txt"
+
+while (( "$#" )); do
+    case "$1" in
+        -f|--sytems_file)
+            systems_file="$2"
+            shift 2
+            ;;
+        -v|--version)
+            echo "$(basename $0) v$version"
+            exit 0
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -*|--*)
+            echo "Error: Unsupported flag $1" >&2
+            exit 1
+            ;;
+        *)
+            params+="$1 "
+            shift
+            ;;
+    esac
+done
+# set positional arguments in their proper place
+eval set -- "$params"
+
+if [[ ! -e "$systems_file" ]]; then
+    echo "Systems file missing: $systems_file"
+    exit 1
+fi
+
+wget -nv -i systems.txt -P systems/
+find systems/ -name "*.tgz" -exec tar xf {} -C systems/ \; -exec rm {} \;
