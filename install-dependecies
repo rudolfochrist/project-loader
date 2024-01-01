@@ -32,6 +32,7 @@ Usage: $(basename "$0") [options] [-f file]
 
 Options:
   -f, --systems-file                     Specify systems.txt file to use.
+  -y                                     Force download regadless systems directory exists.
   -v, --version                          Show version.
   -h, --help                             Show help.
 EOF
@@ -40,12 +41,17 @@ EOF
 # Parsing args
 params=""
 systems_file="systems.txt"
+force="false"
 
 while (( "$#" )); do
     case "$1" in
         -f|--sytems_file)
             systems_file="$2"
             shift 2
+            ;;
+        -y)
+            force="true"
+            shift
             ;;
         -v|--version)
             echo "$(basename "$0") v$version"
@@ -71,6 +77,10 @@ eval set -- "$params"
 if [[ ! -e "$systems_file" ]]; then
     echo "Systems file missing: $systems_file"
     exit 1
+fi
+
+if [[ "$force" = "true" ]]; then
+    rm -r "systems/"
 fi
 
 if [[ -e "systems/" ]];then
