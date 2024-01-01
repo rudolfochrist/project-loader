@@ -17,9 +17,13 @@
 (defun initialize-registry (&optional init-file)
   (load (or init-file (merge-pathnames "init.lisp" (uiop:getcwd)))))
 
+#+quicklisp
 (defun load-system (name &key verbose silent)
-  #+quicklisp (ql:quickload name :verbose verbose :silent silent)
-  #-quicklisp (asdf:load-system name :verbose verbose))
+  (ql:quickload name :verbose verbose :silent silent))
+
+#+(and asdf (not quicklisp))
+(defun load-system (name &key verbose)
+  (asdf:load-system name :verbose verbose))
 
 (defun load-systems (&rest systems)
   (mapc #'load-system systems))
@@ -37,6 +41,7 @@
 (defun load-directory-systems ()
   (apply #'load-systems (find-directory-systems)))
 
+#+quicklisp
 (defun collect-dependency-urls (system-names)
   "Collect the QL release URL for each dependency of SYSTEM"
   (flet ((system-deps (system)
@@ -55,6 +60,7 @@
                           (setf (gethash (archive-url system) deps) t))))
           finally (return (hash-keys deps)))))
 
+#+quicklisp
 (defun pin-dependencies (system-names &key (outfile #p"systems.txt") (if-exists :rename-and-delete))
   (when (eq system-names :here)
     (setf system-names (find-directory-systems)))
