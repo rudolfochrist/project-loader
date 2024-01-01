@@ -14,10 +14,21 @@ assert_value ()
     fi
 }
 
+# https://stackoverflow.com/questions/29436275/how-to-prompt-for-yes-or-no-in-bash
+function yes_or_no {
+    while true; do
+        read -rp "$* [y/n]: " yn
+        case $yn in
+            [Yy]*) return 0  ;;
+            [Nn]*) echo "Aborted" ; exit  1 ;;
+        esac
+    done
+}
+
 usage ()
 {
     cat <<EOF
-Usage: $(basename $0) [options] [-f file]
+Usage: $(basename "$0") [options] [-f file]
 
 Options:
   -f, --systems-file                     Specify systems.txt file to use.
@@ -37,14 +48,14 @@ while (( "$#" )); do
             shift 2
             ;;
         -v|--version)
-            echo "$(basename $0) v$version"
+            echo "$(basename "$0") v$version"
             exit 0
             ;;
         -h|--help)
             usage
             exit 0
             ;;
-        -*|--*)
+        -*)
             echo "Error: Unsupported flag $1" >&2
             exit 1
             ;;
@@ -60,6 +71,10 @@ eval set -- "$params"
 if [[ ! -e "$systems_file" ]]; then
     echo "Systems file missing: $systems_file"
     exit 1
+fi
+
+if [[ -e "systems/" ]];then
+    yes_or_no "Overwrite systems/ directory?" && rm -r "systems/"
 fi
 
 wget -nv -i systems.txt -P systems/

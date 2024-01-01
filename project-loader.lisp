@@ -8,7 +8,9 @@
    #:load-system
    #:load-systems
    #:pin-dependencies
-   #:write-init-file))
+   #:write-init-file
+   #:find-directory-systems
+   #:load-directory-systems))
 
 (in-package #:project-loader)
 
@@ -21,6 +23,19 @@
 
 (defun load-systems (&rest systems)
   (mapc #'load-system systems))
+
+(defun find-directory-systems (&optional directory)
+  (let ((systems '()))
+    (asdf/system-registry:map-systems
+     (lambda (system)
+       (when (uiop:pathname-equal
+              (asdf:system-source-directory system)
+              (or directory (uiop:getcwd)))
+         (pushnew (asdf:component-name system) systems :test #'string=))))
+    (nreverse systems)))
+
+(defun load-directory-systems ()
+  (apply #'load-systems (find-directory-systems)))
 
 (defun collect-dependency-urls (system-names)
   "Collect the QL release URL for each dependency of SYSTEM"
@@ -41,9 +56,12 @@
           finally (return (hash-keys deps)))))
 
 (defun pin-dependencies (system-names &key (outfile #p"systems.txt") (if-exists :rename-and-delete))
+  (when (eq system-names :here)
+    (setf system-names (find-directory-systems)))
   (with-open-file (out outfile :direction :output :if-exists if-exists)
     (dolist (dep (collect-dependency-urls system-names))
-      (write-line dep out))))
+      (write-line dep out)))
+  (probe-file outfile))
 
 (defun write-init-file (&optional directory)
   (uiop:copy-file (asdf:system-relative-pathname "project-loader" "init.lisp")
