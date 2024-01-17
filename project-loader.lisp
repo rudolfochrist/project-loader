@@ -28,19 +28,6 @@
 (defun load-systems (&rest systems)
   (mapc #'load-system systems))
 
-(defun find-directory-systems (&optional directory)
-  (let ((systems '()))
-    (asdf/system-registry:map-systems
-     (lambda (system)
-       (when (uiop:pathname-equal
-              (asdf:system-source-directory system)
-              (or directory (uiop:getcwd)))
-         (pushnew (asdf:component-name system) systems :test #'string=))))
-    (nreverse systems)))
-
-(defun load-directory-systems ()
-  (apply #'load-systems (find-directory-systems)))
-
 #+quicklisp
 (defun collect-dependency-urls (system-names)
   "Collect the QL release URL for each dependency of SYSTEM"
