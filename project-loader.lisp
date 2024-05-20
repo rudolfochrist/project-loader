@@ -5,55 +5,50 @@
   (:use :cl)
   (:export
    #:initialize-registry
-   #:load-system
-   #:load-systems
    #:pin-dependencies
-   #:write-init-file
-   #:find-directory-systems
-   #:load-directory-systems))
+   #:write-init-file))
 
 (in-package #:project-loader)
 
 (defun initialize-registry (&optional init-file)
-  (load (or init-file (merge-pathnames "init.lisp" (uiop:getcwd)))))
-
-#+quicklisp
-(defun load-system (name &key verbose silent)
-  (ql:quickload name :verbose verbose :silent silent))
-
-#+(and asdf (not quicklisp))
-(defun load-system (name &key verbose)
-  (asdf:load-system name :verbose verbose))
-
-(defun load-systems (&rest systems)
-  (mapc #'load-system systems))
+  (let ((init (or init-file (merge-pathnames "init.lisp" (uiop:getcwd)))))
+    (if (probe-file init)
+        (load init)
+        (format t "File not found: ~A" init))))
 
 #+quicklisp
 (defun collect-dependency-urls (system-names)
   "Collect the QL release URL for each dependency of SYSTEM"
-  (flet ((system-deps (system)
-           (ql-dist:required-systems system))
-         (archive-url (system)
+  (flet ((archive-url (system)
            (ql-dist:archive-url (ql-dist:release system)))
-         (hash-keys (hash-table)
-           (loop for k being the hash-keys of hash-table collect k)))
-    (loop with deps = (make-hash-table :test 'equal)
-          for system-name in system-names
-          do (loop with d = (remove-if #'consp (asdf:system-depends-on (asdf:find-system system-name)))
-                   while d
-                   do (let ((system (ql-dist:find-system (pop d))))
-                        (when system
-                          (setf d (append d (system-deps system)))
-                          (setf (gethash (archive-url system) deps) t))))
-          finally (return (hash-keys deps)))))
+         (archive-md (system)
+           (ql-dist:archive-md5 (ql-dist:release system))))
+    (labels ((collect (systems systems-table)
+               (let ((system-name (print (first systems))))
+                 (when (and system-name
+                            (not (consp system-name)))
+                   (let ((asdf-system (asdf:find-system system-name nil))
+                         (ql-system (ql-dist:find-system system-name)))
+                     (when ql-system
+                       (setf (gethash (archive-url ql-system) systems-table)
+                             (archive-md ql-system)))
+                     (collect (asdf:system-depends-on asdf-system) systems-table)
+                     (collect (rest systems) systems-table))))))
+      (let ((systems-table (make-hash-table :test 'equal)))
+        (collect system-names systems-table)
+        systems-table))))
 
 #+quicklisp
-(defun pin-dependencies (system-names &key (outfile #p"systems.txt") (if-exists :rename-and-delete))
-  (when (eq system-names :here)
-    (setf system-names (find-directory-systems)))
-  (with-open-file (out outfile :direction :output :if-exists if-exists)
-    (dolist (dep (collect-dependency-urls system-names))
-      (write-line dep out)))
+(defun pin-dependencies (system-names &key (outfile #p"ql.lock") (if-exists :rename-and-delete))
+  (unless (listp system-names)
+    (setf system-names (list system-names)))
+  (with-open-file (systems outfile :direction :output :if-exists if-exists)
+    (maphash (lambda (url hash)
+               (format systems "~A ~A ~A~%"
+                       (ppcre:regex-replace "http://" url "https://")
+                       hash
+                       (ppcre:scan-to-strings "[^/]+\.tgz" url)))
+             (collect-dependency-urls system-names)))
   (probe-file outfile))
 
 (defun write-init-file (&optional directory)

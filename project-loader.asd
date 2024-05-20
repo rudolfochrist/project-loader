@@ -9,8 +9,9 @@
   :bug-tracker "https://github.com/rudolfochrist/project-loader/issues"
   :source-control (:git "https://github.com/rudolfochrist/project-loader.git")
   :version (:read-file-line "version")
-  :depends-on ((:require "uiop"))
-  :components ((:static-file "loader.lisp")
+  :depends-on ((:require "uiop")
+               "cl-ppcre-unicode")
+  :components ((:static-file "init.lisp")
                (:static-file "install-dependecies")
                (:file "project-loader"))
   :description "A utility to load Quicklisp systems without loading Quicklisp itself."

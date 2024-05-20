@@ -4,7 +4,6 @@
 
 # meta
 version=$(cat version)
-name=install-dependecies
 
 assert_value ()
 {
@@ -31,7 +30,7 @@ usage ()
 Usage: $(basename "$0") [options] [-f file]
 
 Options:
-  -f, --systems-file                     Specify systems.txt file to use.
+  -f, --lock-file                        Specify ql.lock file to use.
   -y                                     Force download regadless systems directory exists.
   -v, --version                          Show version.
   -h, --help                             Show help.
@@ -40,13 +39,14 @@ EOF
 
 # Parsing args
 params=""
-systems_file="systems.txt"
+lock_file="ql.lock"
 force="false"
+global=no
 
 while (( "$#" )); do
     case "$1" in
         -f|--sytems_file)
-            systems_file="$2"
+            lock_file="$2"
             shift 2
             ;;
         -y)
@@ -74,8 +74,8 @@ done
 # set positional arguments in their proper place
 eval set -- "$params"
 
-if [[ ! -e "$systems_file" ]]; then
-    echo "Systems file missing: $systems_file"
+if [[ ! -e "$lock_file" ]]; then
+    echo "Lock file missing: $lock_file"
     exit 1
 fi
 
@@ -87,5 +87,11 @@ if [[ -e "systems/" ]];then
     yes_or_no "Overwrite systems/ directory?" && rm -r "systems/"
 fi
 
-wget -nv -i systems.txt -P systems/
-find systems/ -name "*.tgz" -exec tar xf {} -C systems/ \; -exec rm {} \;
+mkdir -p systems
+cut -d' ' -f1 < "$lock_file" > systems/urls.txt
+cut -d' ' -f2,3 < "$lock_file" > systems/hashes.txt
+
+wget -nv -i systems/urls.txt -P systems/
+if (cd systems && md5sum -c hashes.txt); then
+    find systems/ -name "*.tgz" -exec tar xf {} -C systems/ \; -exec rm {} \;
+fi

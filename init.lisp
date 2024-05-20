@@ -2,6 +2,6 @@
 (asdf:initialize-source-registry
  '(:source-registry
    (:directory (:here))
-   (:tree (:here "systems/"))
    (:tree (:here "vendor/"))
+   (:tree (:here "systems/"))
    :inherit-configuration))
