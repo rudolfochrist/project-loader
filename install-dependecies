@@ -80,18 +80,14 @@ if [[ ! -e "$lock_file" ]]; then
 fi
 
 if [[ "$force" = "true" ]]; then
-    rm -r "systems/"
+    rm -r ".ql-systems/"
 fi
 
-if [[ -e "systems/" ]];then
-    yes_or_no "Overwrite systems/ directory?" && rm -r "systems/"
-fi
+mkdir -p .ql-systems
+cut -d' ' -f1 < "$lock_file" > .ql-systems/urls.txt
+cut -d' ' -f2,3 < "$lock_file" > .ql-systems/hashes.txt
 
-mkdir -p systems
-cut -d' ' -f1 < "$lock_file" > systems/urls.txt
-cut -d' ' -f2,3 < "$lock_file" > systems/hashes.txt
-
-wget -nv -i systems/urls.txt -P systems/
-if (cd systems && md5sum -c hashes.txt); then
-    find systems/ -name "*.tgz" -exec tar xf {} -C systems/ \; -exec rm {} \;
+wget -nv -i .ql-systems/urls.txt -P .ql-systems/ -c
+if (cd .ql-systems && md5sum -c hashes.txt); then
+    find .ql-systems/ -name "*.tgz" -exec tar xf {} -C .ql-systems/ \;
 fi
