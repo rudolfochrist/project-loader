@@ -32,6 +32,7 @@ Usage: $(basename "$0") [options] [-f file]
 Options:
   -f, --lock-file                        Specify ql.lock file to use.
   -y                                     Force download regadless systems directory exists.
+  --verbose                              Show verbose output.
   -v, --version                          Show version.
   -h, --help                             Show help.
 EOF
@@ -40,8 +41,11 @@ EOF
 # Parsing args
 params=""
 lock_file="ql.lock"
+systems_dir=".ql-systems"
 force="false"
 global=no
+curl_verbose="-sS"
+md5sum_verbose=/dev/null
 
 while (( "$#" )); do
     case "$1" in
@@ -51,6 +55,11 @@ while (( "$#" )); do
             ;;
         -y)
             force="true"
+            shift
+            ;;
+        --verbose)
+            curl_verbose="-S"
+            md5sum_verbose=/dev/stdout
             shift
             ;;
         -v|--version)
@@ -80,14 +89,37 @@ if [[ ! -e "$lock_file" ]]; then
 fi
 
 if [[ "$force" = "true" ]]; then
-    rm -r ".ql-systems/"
+    rm -r "$systems_dir"
 fi
 
-mkdir -p .ql-systems
-cut -d' ' -f1 < "$lock_file" > .ql-systems/urls.txt
-cut -d' ' -f2,3 < "$lock_file" > .ql-systems/hashes.txt
+mkdir -p "$systems_dir"
 
-wget -nv -i .ql-systems/urls.txt -P .ql-systems/ -c
-if (cd .ql-systems && md5sum -c hashes.txt); then
-    find .ql-systems/ -name "*.tgz" -exec tar xf {} -C .ql-systems/ \;
-fi
+while read line
+do
+    if [[ -n "$line" ]]
+    then
+        url="$(echo "$line" | cut -d' ' -f1)"
+        hash="$(echo "$line"| cut -d' ' -f2,3)"
+        tarball="$(basename "$url")"
+        dir="${tarball%.tgz}"
+
+        echo "Installing $dir"
+        if [[ ! -e "$systems_dir/$dir" ]]
+        then
+            echo "|-- Downloading $dir"
+            curl "$curl_verbose" "$url" -o "$systems_dir/$tarball"
+            if (cd "$systems_dir" && echo "$hash" | md5sum -c > "$md5sum_verbose")
+            then
+                echo -e "|-- Extracting $dir\n"
+                tar xf "$systems_dir/$tarball" -C "$systems_dir"
+            fi
+            rm -f "$systems_dir/$tarball"
+        fi
+    fi
+done < "$lock_file"
+
+system_count="$(find "$systems_dir" -maxdepth 1 -mindepth 1 -type d | wc -l | xargs)" # xargs to trim whitespace
+
+echo "Installed $system_count systems."
+
+
